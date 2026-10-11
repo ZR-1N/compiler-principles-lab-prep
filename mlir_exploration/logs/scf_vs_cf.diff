@@ -1,0 +1,27 @@
+--- stages/01_scf.mlir	2026-10-11 01:03:51.486768294 +0800
++++ stages/02_cf.mlir	2026-10-11 01:04:15.498467822 +0800
+@@ -3,12 +3,18 @@
+     %c0 = arith.constant 0 : index
+     %c16 = arith.constant 16 : index
+     %c1 = arith.constant 1 : index
+-    scf.for %arg3 = %c0 to %c16 step %c1 {
+-      %0 = memref.load %arg0[%arg3] : memref<16xi16>
+-      %1 = memref.load %arg1[%arg3] : memref<16xi16>
+-      %2 = arith.addi %0, %1 : i16
+-      memref.store %2, %arg2[%arg3] : memref<16xi16>
+-    }
++    cf.br ^bb1(%c0 : index)
++  ^bb1(%0: index):  // 2 preds: ^bb0, ^bb2
++    %1 = arith.cmpi slt, %0, %c16 : index
++    cf.cond_br %1, ^bb2, ^bb3
++  ^bb2:  // pred: ^bb1
++    %2 = memref.load %arg0[%0] : memref<16xi16>
++    %3 = memref.load %arg1[%0] : memref<16xi16>
++    %4 = arith.addi %2, %3 : i16
++    memref.store %4, %arg2[%0] : memref<16xi16>
++    %5 = arith.addi %0, %c1 : index
++    cf.br ^bb1(%5 : index)
++  ^bb3:  // pred: ^bb1
+     return
+   }
+ }
